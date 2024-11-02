@@ -5,7 +5,7 @@ Starting this as a nice way to keep my pre commits easy to find rather than comb
 
 ## How to use
 
-- Copy script into .git/hooks/pre-commit
+- Copy script to .git/hooks/pre-commit
 - chmod +x the file
 
 
