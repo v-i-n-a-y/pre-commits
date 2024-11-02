@@ -3,6 +3,11 @@
 
 Starting this as a nice way to keep my pre commits easy to find rather than combing through old repositories...laziness to be honest
 
+## How to use
+
+- Copy script into .git/hooks/pre-commit
+- chmod +x the file
+
 
 ## Python
 
