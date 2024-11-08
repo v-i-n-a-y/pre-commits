@@ -9,15 +9,19 @@ Starting this as a nice way to keep my pre commits easy to find rather than comb
 - chmod +x the file
 
 
-## Python
+## Formatters
 
-- black
+- python-black
    - Runs black on files about to be commited
  
-- ruff
+- python-ruff
   - Runs riff on the files about to be commited
   - Remember to define your rules
   - Personal preference for larger python projects
 
+- sh-beautysh
+  - Formats sh scripts
+	- Need to have beautysh installed via pip though
+	- Not ideal but formatted code is easier on the eyes
 
 

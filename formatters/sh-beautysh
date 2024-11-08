@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+files=`git diff --staged --name-only --diff-filter=d -- "*.sh"`
+
+for file in $files; do
+  beautysh $file
+  git add $file
+done
