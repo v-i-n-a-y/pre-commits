@@ -93,7 +93,7 @@ def main(argv=None):
     parser.add_argument("--update-holder")
     parser.add_argument("--update-year")
 
-    parser.add_argument("--year", default=str(datetime.now().year()))
+    parser.add_argument("--year", default=str(datetime.now().year))
     parser.add_argument("--holder", required=True)
 
     args = parser.parse_args(argv)
