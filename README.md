@@ -9,7 +9,7 @@ Add the hooks repository to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/v-i-n-a-y/hooks
-    rev: v0.1.0
+    rev: v0.1.2
     hooks:
       - id: copyright
         args: [--holder, "Your Company"]
