@@ -43,6 +43,18 @@ Example Usage
 pre-commit run copyright-check --all-files --args "--holder 'Your Company'"
 ```
 
+### ruff-check
+
+Run 'ruff check' for extremely fast Python linting.
+
+**Entry:** `ruff check --force-exclude`
+
+### ruff-format
+
+Format Python code using ruff's formatter.
+
+**Entry:** `ruff format --force-exclude`
+
 ## Adding New Hooks
 
 1. Add a new module under src/hooks/
