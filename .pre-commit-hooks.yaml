@@ -5,3 +5,18 @@
   types: [python]
   require_serial: true
 
+- id: ruff-check
+  name: ruff-check
+  description: "Run 'ruff check' for extremely fast Python linting"
+  entry: ruff check --force-exclude
+  language: python
+  types_or: [python, pyi, jupyter]
+  require_serial: true
+
+- id: ruff-format
+  name: ruff format
+  description: "Format python code"
+  entry: ruff format --force-exclude
+  language: python
+  types_or: [python, pyi, jupyter]
+  require_serial: true
