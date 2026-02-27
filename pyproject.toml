@@ -1,7 +1,10 @@
 [project]
-name = "copyright-hook"
+name = "precommit-hooks"
 version = "0.1.0"
 requires-python = ">=3.9"
+dependencies = [
+    "ruff>=0.15.4",
+]
 
 [project.scripts]
 copyright-hook = "hooks.copyright:main"
