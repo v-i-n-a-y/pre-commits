@@ -20,3 +20,20 @@
   language: python
   types_or: [python, pyi, jupyter]
   require_serial: true
+
+- id: pytest-run
+  name: pytest-run
+  description: "Run pytest to execute tests"
+  entry: pytest-run
+  language: python
+  types: [python]
+  pass_filenames: false
+
+- id: coverage-check
+  name: coverage-check
+  description: "Check test coverage meets minimum threshold"
+  entry: coverage-check
+  language: python
+  types: [python]
+  pass_filenames: false
+  args: ["--min-coverage", "80"]
