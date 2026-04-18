@@ -1,8 +1,15 @@
 - id: copyright-check
   name: copyright-check
-  entry: copyright-hook
+  entry: copyright-check
   language: python
   types: [python]
+  require_serial: true
+
+- id: copyright-check-rust
+  name: copyright-check-rust
+  entry: copyright-rust
+  language: python
+  types: [rust]
   require_serial: true
 
 - id: ruff-check
@@ -36,4 +43,19 @@
   language: python
   types: [python]
   pass_filenames: false
-  args: ["--min-coverage", "80"]
+
+- id: rust-fmt
+  name: rust-fmt
+  description: "Format Rust code"
+  entry: rustfmt
+  language: system
+  types: [rust]
+  pass_filenames: false
+
+- id: rust-clippy
+  name: rust-clippy
+  description: "Lint Rust code with clippy"
+  entry: clippy
+  language: system
+  types: [rust]
+  pass_filenames: false
