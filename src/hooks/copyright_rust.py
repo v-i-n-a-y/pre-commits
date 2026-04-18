@@ -10,6 +10,8 @@ from pathlib import Path
 HEADER_SCAN_LIMIT = 20
 COPYRIGHT_TEMPLATE = "//! Copyright {year} Evandor Limited\n//! All Rights Reserved\n//! Contact: info@evandor.co.uk\n"
 
+COPYRIGHT_DEFAULT_YEAR = str(datetime.now().year)
+
 COPYRIGHT_RE = re.compile(
     r"Copyright\s+(?P<year>\d{4})\s+Evandor\s+Limited", re.IGNORECASE
 )
@@ -76,8 +78,8 @@ def process_rust_file(
                 preview(filepath, lines[idx], new_notice)
             else:
                 lines[idx] = new_notice
-    else:
-        new_notice = build_notice(default_year)
+        else:
+            new_notice = build_notice(COPYRIGHT_DEFAULT_YEAR)
         changed = True
         if dry_run:
             preview(filepath, "(no copyright)", new_notice.strip())
@@ -105,7 +107,7 @@ def main(argv=None):
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--update-year")
 
-    parser.add_argument("--year", default=str(datetime.now().year))
+    parser.add_argument("--year", default=COPYRIGHT_DEFAULT_YEAR)
 
     args = parser.parse_args(argv)
 
