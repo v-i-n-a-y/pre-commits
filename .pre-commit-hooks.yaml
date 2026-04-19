@@ -47,7 +47,7 @@
 - id: rust-fmt
   name: rust-fmt
   description: "Format Rust code"
-  entry: rustfmt
+  entry: cargo fmt --
   language: system
   types: [rust]
   pass_filenames: false
@@ -55,7 +55,7 @@
 - id: rust-clippy
   name: rust-clippy
   description: "Lint Rust code with clippy"
-  entry: clippy
+  entry: cargo clippy --
   language: system
   types: [rust]
   pass_filenames: false
