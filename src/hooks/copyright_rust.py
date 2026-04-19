@@ -78,8 +78,8 @@ def process_rust_file(
                 preview(filepath, lines[idx], new_notice)
             else:
                 lines[idx] = new_notice
-        else:
-            new_notice = build_notice(COPYRIGHT_DEFAULT_YEAR)
+    else:
+        new_notice = build_notice(COPYRIGHT_DEFAULT_YEAR)
         changed = True
         if dry_run:
             preview(filepath, "(no copyright)", new_notice.strip())

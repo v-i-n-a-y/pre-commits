@@ -9,7 +9,8 @@ dependencies = [
 ]
 
 [project.scripts]
-copyright-hook = "hooks.copyright:main"
+copyright-check = "hooks.copyright:main"
+copyright-rust = "hooks.copyright_rust:main"
 pytest-run = "hooks.pytest:main"
 coverage-check = "hooks.coverage:main"
 
