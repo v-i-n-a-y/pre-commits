@@ -17,6 +17,7 @@ end-of-file-fixer = "hooks.end_of_file:main"
 mixed-line-endings = "hooks.line_endings:main"
 no-commit-to-branch = "hooks.no_commit_to_branch:main"
 detect-secrets = "hooks.detect_secrets:main"
+conventional-commit = "hooks.conventional_commit:main"
 
 [build-system]
 requires = ["setuptools>=61"]

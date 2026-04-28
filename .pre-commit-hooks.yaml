@@ -12,6 +12,13 @@
   entry: detect-secrets
   language: python
   types: [text]
+- id: conventional-commit
+  name: conventional-commit
+  description: "Enforce Conventional Commits format on commit messages"
+  entry: conventional-commit
+  language: python
+  stages: [commit-msg]
+  pass_filenames: false
 
 - id: ruff-check
   name: ruff-check
