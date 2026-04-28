@@ -53,3 +53,32 @@
   language: system
   types: [rust]
   pass_filenames: false
+
+- id: trailing-whitespace
+  name: trailing-whitespace
+  description: "Strip trailing whitespace from files"
+  entry: trailing-whitespace
+  language: python
+  types: [text]
+
+- id: end-of-file-fixer
+  name: end-of-file-fixer
+  description: "Ensure files end with a single newline"
+  entry: end-of-file-fixer
+  language: python
+  types: [text]
+
+- id: mixed-line-endings
+  name: mixed-line-endings
+  description: "Normalise mixed CR/LF line endings (default: LF)"
+  entry: mixed-line-endings
+  language: python
+  types: [text]
+
+- id: no-commit-to-branch
+  name: no-commit-to-branch
+  description: "Block direct commits to protected branches (default: main, master)"
+  entry: no-commit-to-branch
+  language: python
+  pass_filenames: false
+  always_run: true
