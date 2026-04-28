@@ -1,6 +1,6 @@
 [project]
 name = "precommit-hooks"
-version = "0.3.0"
+version = "0.3.1"
 requires-python = ">=3.9"
 dependencies = [
     "ruff>=0.15.4",
@@ -10,7 +10,6 @@ dependencies = [
 
 [project.scripts]
 copyright-check = "hooks.copyright:main"
-copyright-rust = "hooks.copyright_rust:main"
 pytest-run = "hooks.pytest:main"
 coverage-check = "hooks.coverage:main"
 
