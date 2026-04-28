@@ -1,106 +1,180 @@
-# Hooks
+# pre-commits
 
-A collection of reusable pre-commit hooks for Python projects. Currently includes a copyright header checker, pytest integration, and coverage checking. Designed to be easily extended with additional hooks in the future.
+A collection of reusable [pre-commit](https://pre-commit.com) hooks covering copyright headers, linting, formatting, testing, and coverage — for Python, Rust, and many other languages.
 
-## Installation
+## Quick start
 
-Add the hooks repository to your `.pre-commit-config.yaml`:
+Add to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: https://github.com/v-i-n-a-y/hooks
-    rev: v0.1.0
+  - repo: https://github.com/v-i-n-a-y/pre-commits
+    rev: v0.3.1
     hooks:
-      - id: copyright
+      - id: copyright-check
         args: [--holder, "Your Company"]
+      - id: ruff-check
+      - id: ruff-format
+      - id: pytest-run
+      - id: coverage-check
+        args: [--min-coverage, "90"]
 ```
 
-Then install pre-commit in the target repo
+Then run:
 
 ```bash
 pre-commit install
 pre-commit run --all-files
 ```
 
-## Available Hooks
+---
 
-### copyright
+## Available hooks
 
-Ensures all Python files have a copyright header.
+### `copyright-check`
 
-**Arguments:**
+Inserts or updates a copyright header in source files. Supports **50+ file extensions** across all popular languages, with automatic comment style detection per extension.
 
-* holder (required): Default copyright holder
-* --year (optional, default current year): Default copyright year
-* --dry-run: Show changes without modifying files
-* --update-holder: Update the holder in existing headers
-* --update-year: Update the year in existing headers
-
-Example Usage:
-
-```bash
-pre-commit run copyright-check --all-files --args "--holder 'Your Company'"
-```
-
-### ruff-check
-
-Run 'ruff check' for extremely fast Python linting.
-
-**Entry:** `ruff check --force-exclude`
-
-### ruff-format
-
-Format Python code using ruff's formatter.
-
-**Entry:** `ruff format --force-exclude`
-
-### pytest-run
-
-Run pytest to execute tests.
-
-**Entry:** `pytest-run`
+| Style | Extensions |
+|-------|-----------|
+| `# ...` | `.py` `.sh` `.bash` `.zsh` `.rb` `.yaml` `.toml` `.tf` and more |
+| `// ...` | `.rs` `.go` `.java` `.js` `.ts` `.cpp` `.c` `.h` `.cs` `.swift` `.kt` `.php` and more |
+| `/* ... */` | available via `--style slashstar` |
+| `:: ...` | `.bat` `.cmd` |
+| `<!-- ... -->` | `.html` `.xml` `.svg` |
+| `-- ...` | `.sql` `.lua` `.hs` |
+| `"""..."""` | available via `--style docstring` |
 
 **Arguments:**
 
-* files (optional): Specific files or directories to test (default: run all tests)
-* --add-opts: Additional options to pass to pytest
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `--holder` | yes | Copyright holder name |
+| `--year` | no (default: current year) | Year used in new notices |
+| `--update-year YEAR` | no | Replace the year in existing notices |
+| `--update-holder HOLDER` | no | Replace the holder in existing notices |
+| `--style NAME` | no | Force a named style for all files (`hash`, `doubleslash`, `slashstar`, `docstring`, `bat`, `html`, `sql`) |
+| `--template "..."` | no | Raw format string, e.g. `"// Copyright {year} {holder}"` — overrides everything |
+| `--dry-run` | no | Show what would change without modifying files (exits 1 if changes needed) |
 
-Example Usage:
+Files with an unrecognised extension are skipped with a warning unless `--style` or `--template` is provided.
 
-```bash
-pre-commit run pytest-run --all-files --args "tests/"
-pre-commit run pytest-run --args "--add-opts=-v"
+**Examples:**
+
+```yaml
+# Standard usage
+- id: copyright-check
+  args: [--holder, "Acme Corp"]
+
+# Force a custom comment style for all matched files
+- id: copyright-check
+  args: [--holder, "Acme Corp", --style, slashstar]
+
+# Fully custom template (e.g. for a non-standard language)
+- id: copyright-check
+  args: [--holder, "Acme Corp", --template, "/* Copyright {year} {holder} */"]
+
+# Bulk-update the year across the whole repo
+- id: copyright-check
+  args: [--holder, "Acme Corp", --update-year, "2026"]
 ```
 
-### coverage-check
+> **Note:** Shebang lines (`#!/...`) and Python encoding declarations are automatically preserved above the inserted notice.
 
-Check test coverage meets a minimum threshold.
+---
 
-**Entry:** `coverage-check`
+### `ruff-check`
+
+Runs [`ruff check --force-exclude`](https://docs.astral.sh/ruff/) for fast Python linting.
+
+Applies to: `.py`, `.pyi`, `.ipynb`
+
+```yaml
+- id: ruff-check
+```
+
+---
+
+### `ruff-format`
+
+Runs [`ruff format --force-exclude`](https://docs.astral.sh/ruff/) to format Python code.
+
+Applies to: `.py`, `.pyi`, `.ipynb`
+
+```yaml
+- id: ruff-format
+```
+
+---
+
+### `pytest-run`
+
+Runs your test suite via `pytest`. Fails the commit if any tests fail.
 
 **Arguments:**
 
-* files (optional): Specific files or directories to test (default: run all tests)
-* --min-coverage (optional, default 80): Minimum required coverage percentage
-* --add-opts: Additional options to pass to pytest
+| Argument | Description |
+|----------|-------------|
+| `--add-opts` | Extra options passed directly to pytest |
 
-Example Usage:
+**Examples:**
 
-```bash
-pre-commit run coverage-check --all-files --args "--min-coverage 90"
+```yaml
+- id: pytest-run
+
+# With extra pytest options
+- id: pytest-run
+  args: [--add-opts, "-v --tb=short"]
 ```
 
-## Adding New Hooks
+---
 
-1. Add a new module under src/hooks/
-1. Add a console script entry in pyproject.toml.
-1. Add a corresponding entry in .pre-commit-hooks.yaml.
+### `coverage-check`
 
-### Contributing
-* Fork the repo, create a branch, add your hook or improvements.
-* Ensure all hooks pass linting and include meaningful tests.
-* Submit a pull request with a clear description.
+Runs pytest with coverage collection and fails if the line coverage falls below the threshold.
+
+**Arguments:**
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--min-coverage` | `80` | Minimum required line coverage percentage |
+| `--add-opts` | — | Extra options passed to pytest |
+
+**Examples:**
+
+```yaml
+- id: coverage-check
+  args: [--min-coverage, "90"]
+```
+
+---
+
+### `rust-fmt`
+
+Formats Rust code via `cargo fmt`. Requires Rust to be installed on the host.
+
+```yaml
+- id: rust-fmt
+```
+
+---
+
+### `rust-clippy`
+
+Lints Rust code via `cargo clippy`. Requires Rust to be installed on the host.
+
+```yaml
+- id: rust-clippy
+```
+
+---
+
+## Requirements
+
+- Python ≥ 3.9
+- [pre-commit](https://pre-commit.com) installed in the target repo
+- Rust toolchain (`cargo`) for `rust-fmt` and `rust-clippy`
 
 ## License
 
-[MIT License](LICENSE)
+[MIT](LICENSE)
