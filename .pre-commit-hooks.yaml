@@ -6,13 +6,6 @@
   files: '\.(py|pyi|sh|bash|zsh|fish|rb|yaml|yml|toml|r|pl|pm|tf|tfvars|rs|go|java|js|ts|jsx|tsx|c|cpp|cc|cxx|h|hpp|hxx|cs|swift|kt|kts|scala|dart|m|mm|groovy|gradle|proto|php|bat|cmd|html|htm|xml|svg|sql|lua|hs|lhs|elm)$'
   require_serial: true
 
-- id: copyright-check-rust
-  name: copyright-check-rust
-  entry: copyright-rust
-  language: python
-  types: [rust]
-  require_serial: true
-
 - id: ruff-check
   name: ruff-check
   description: "Run 'ruff check' for extremely fast Python linting"
