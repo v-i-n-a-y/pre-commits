@@ -6,6 +6,13 @@
   files: '\.(py|pyi|sh|bash|zsh|fish|rb|yaml|yml|toml|r|pl|pm|tf|tfvars|rs|go|java|js|ts|jsx|tsx|c|cpp|cc|cxx|h|hpp|hxx|cs|swift|kt|kts|scala|dart|m|mm|groovy|gradle|proto|php|bat|cmd|html|htm|xml|svg|sql|lua|hs|lhs|elm)$'
   require_serial: true
 
+- id: detect-secrets
+  name: detect-secrets
+  description: "Scan for hardcoded secrets, tokens, and credentials"
+  entry: detect-secrets
+  language: python
+  types: [text]
+
 - id: ruff-check
   name: ruff-check
   description: "Run 'ruff check' for extremely fast Python linting"
