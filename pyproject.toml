@@ -12,6 +12,7 @@ dependencies = [
 copyright-check = "hooks.copyright:main"
 pytest-run = "hooks.pytest:main"
 coverage-check = "hooks.coverage:main"
+conventional-commit = "hooks.conventional_commit:main"
 
 [build-system]
 requires = ["setuptools>=61"]

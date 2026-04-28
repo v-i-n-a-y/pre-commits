@@ -6,6 +6,14 @@
   files: '\.(py|pyi|sh|bash|zsh|fish|rb|yaml|yml|toml|r|pl|pm|tf|tfvars|rs|go|java|js|ts|jsx|tsx|c|cpp|cc|cxx|h|hpp|hxx|cs|swift|kt|kts|scala|dart|m|mm|groovy|gradle|proto|php|bat|cmd|html|htm|xml|svg|sql|lua|hs|lhs|elm)$'
   require_serial: true
 
+- id: conventional-commit
+  name: conventional-commit
+  description: "Enforce Conventional Commits format on commit messages"
+  entry: conventional-commit
+  language: python
+  stages: [commit-msg]
+  pass_filenames: false
+
 - id: ruff-check
   name: ruff-check
   description: "Run 'ruff check' for extremely fast Python linting"
