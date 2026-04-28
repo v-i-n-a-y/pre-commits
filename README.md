@@ -9,10 +9,17 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/v-i-n-a-y/pre-commits
-    rev: v0.3.1
+    rev: v0.4.0
     hooks:
       - id: copyright-check
         args: [--holder, "Your Company"]
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-endings
+      - id: no-commit-to-branch
+      - id: detect-secrets
+      - id: conventional-commit
+        stages: [commit-msg]
       - id: ruff-check
       - id: ruff-format
       - id: pytest-run
@@ -145,6 +152,103 @@ Runs pytest with coverage collection and fails if the line coverage falls below 
 ```yaml
 - id: coverage-check
   args: [--min-coverage, "90"]
+```
+
+---
+
+### `trailing-whitespace`
+
+Strips trailing spaces and tabs from every line. Auto-fixes and returns exit code 1 to trigger re-staging.
+
+```yaml
+- id: trailing-whitespace
+```
+
+---
+
+### `end-of-file-fixer`
+
+Ensures every file ends with exactly one newline. Auto-fixes and returns exit code 1 to trigger re-staging.
+
+```yaml
+- id: end-of-file-fixer
+```
+
+---
+
+### `mixed-line-endings`
+
+Detects and normalises mixed CR/LF line endings. Defaults to LF; pass `--eol crlf` for Windows-style endings. Auto-fixes.
+
+```yaml
+- id: mixed-line-endings
+
+# Force CRLF instead
+- id: mixed-line-endings
+  args: [--eol, crlf]
+```
+
+---
+
+### `no-commit-to-branch`
+
+Blocks direct commits to protected branches. Defaults to `main` and `master`; use `--branch` to customise.
+
+```yaml
+- id: no-commit-to-branch
+
+# Custom protected branches
+- id: no-commit-to-branch
+  args: [--branch, main, --branch, develop]
+```
+
+---
+
+### `detect-secrets`
+
+Scans staged files for hardcoded secrets and credentials without requiring any external tools. Does not auto-fix — secrets must be removed manually.
+
+**Detected patterns:**
+
+| Pattern | Label |
+|---------|-------|
+| `AKIA[0-9A-Z]{16}` | AWS Access Key ID |
+| `-----BEGIN ... PRIVATE KEY-----` | Private key |
+| `gh[pousr]_...` | GitHub token |
+| `xox[baprs]-...` | Slack token |
+| `AIza...` | Google API key |
+| `eyJ...` | JWT |
+| `api_key = "..."`, `secret = "..."` etc. | Generic secret assignment |
+| `password = "..."` | Hardcoded password |
+
+```yaml
+- id: detect-secrets
+```
+
+---
+
+### `conventional-commit`
+
+Validates commit messages against the [Conventional Commits](https://www.conventionalcommits.org) spec. Runs at the `commit-msg` stage.
+
+**Format:** `<type>[(<scope>)][!]: <description>`
+
+**Built-in types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`
+
+**Arguments:**
+
+| Argument | Description |
+|----------|-------------|
+| `--types` | Extra allowed types in addition to the standard set |
+
+```yaml
+- id: conventional-commit
+  stages: [commit-msg]
+
+# With custom extra types
+- id: conventional-commit
+  stages: [commit-msg]
+  args: [--types, wip, spike]
 ```
 
 ---
