@@ -221,8 +221,24 @@ Scans staged files for hardcoded secrets and credentials without requiring any e
 | `api_key = "..."`, `secret = "..."` etc. | Generic secret assignment |
 | `password = "..."` | Hardcoded password |
 
+**Arguments:**
+
+| Argument | Description |
+|----------|-------------|
+| `--baseline PATH` | Suppress findings already recorded in this baseline file |
+| `--update-baseline` | Instead of scanning, (re)write `--baseline` from the current findings in the given files (or, with no files given, every git-tracked file) |
+
+A baseline entry only ever matches by content: each recorded finding is a SHA-256 hash of the exact secret text, keyed to the file it was found in. Editing a baselined file, or a secret changing even slightly, produces a new, unsuppressed finding — a baseline can silence a specific reviewed string, never a whole file or pattern.
+
 ```yaml
 - id: detect-secrets
+  args: [--baseline, .secrets.baseline]
+```
+
+Generate or refresh the baseline (review the diff before committing it — everything it contains is treated as known-safe from then on):
+
+```bash
+detect-secrets --update-baseline --baseline .secrets.baseline
 ```
 
 ---

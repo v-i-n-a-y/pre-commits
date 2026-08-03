@@ -1,5 +1,9 @@
 import argparse
+import hashlib
+import json
 import re
+import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 
 # (pattern, label) — ordered from most to least specific
@@ -23,9 +27,15 @@ SECRET_PATTERNS: list[tuple[str, str]] = [
 
 _COMPILED = [(re.compile(pat), label) for pat, label in SECRET_PATTERNS]
 
+BASELINE_FORMAT_VERSION = 1
+
 
 def _scan(path: Path) -> list[tuple[int, str, str]]:
-    """Return list of (line_number, matched_text, label) for each hit."""
+    """Return list of (line_number, matched_text, label) for each hit.
+
+    `matched_text` is the *full*, untruncated match — used for hashing.
+    Display code is responsible for any truncation.
+    """
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (UnicodeDecodeError, OSError):
@@ -36,27 +46,159 @@ def _scan(path: Path) -> list[tuple[int, str, str]]:
         for regex, label in _COMPILED:
             m = regex.search(line)
             if m:
-                hits.append((lineno, m.group(0)[:60], label))
+                hits.append((lineno, m.group(0), label))
                 break  # one label per line
     return hits
 
 
+def _hash_secret(secret: str) -> str:
+    return hashlib.sha256(secret.encode("utf-8")).hexdigest()
+
+
+def _findings_for_file(filepath: str) -> list[tuple[int, str, str, str]]:
+    """Return (line_number, hashed_secret, snippet, label) per hit in `filepath`."""
+    return [
+        (lineno, _hash_secret(secret), secret[:60], label)
+        for lineno, secret, label in _scan(Path(filepath))
+    ]
+
+
+def _tracked_files() -> list[str]:
+    """Files tracked by git in the current repository, for baseline generation
+    when no explicit file list is given (typical of a manual, whole-repo run)."""
+    try:
+        result = subprocess.run(
+            ["git", "ls-files"], capture_output=True, text=True, check=False
+        )
+    except FileNotFoundError:
+        return []
+    if result.returncode != 0:
+        return []
+    return [line for line in result.stdout.splitlines() if line]
+
+
+def _load_baseline(path: Path) -> dict:
+    """Return the {filepath: [finding, ...]} results map from a baseline file.
+
+    Returns {} (i.e. nothing suppressed) if the file is missing or unreadable —
+    callers are responsible for surfacing that loudly, not this function.
+    """
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"detect-secrets: could not read baseline '{path}': {e}")
+        return {}
+    results = data.get("results")
+    if not isinstance(results, dict):
+        print(f"detect-secrets: baseline '{path}' has no usable 'results' section.")
+        return {}
+    return results
+
+
+def _known_hashes(baseline_results: dict, filepath: str) -> set[str]:
+    entries = baseline_results.get(filepath, [])
+    return {e["hashed_secret"] for e in entries if "hashed_secret" in e}
+
+
+def _write_baseline(path: Path, results: dict) -> None:
+    payload = {
+        "baseline_format_version": BASELINE_FORMAT_VERSION,
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "results": results,
+    }
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+
+
+def _update_baseline(files: list[str], baseline_path: Path) -> int:
+    results: dict[str, list[dict]] = {}
+    total = 0
+    for filepath in files:
+        findings = _findings_for_file(filepath)
+        if not findings:
+            continue
+        results[filepath] = [
+            {"hashed_secret": hashed, "label": label, "line_number": lineno}
+            for lineno, hashed, _snippet, label in findings
+        ]
+        total += len(findings)
+
+    _write_baseline(baseline_path, results)
+    print(
+        f"detect-secrets: recorded {total} finding(s) across {len(results)} "
+        f"file(s) in baseline '{baseline_path}'."
+    )
+    print(
+        "  Review the baseline before committing it — every finding it "
+        "contains will be treated as known and will no longer fail this hook."
+    )
+    return 0
+
+
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Scan files for secrets and credentials")
+    parser = argparse.ArgumentParser(
+        description="Scan files for secrets and credentials"
+    )
     parser.add_argument("files", nargs="*")
+    parser.add_argument(
+        "--baseline",
+        metavar="PATH",
+        help="Baseline file of known, reviewed findings to suppress",
+    )
+    parser.add_argument(
+        "--update-baseline",
+        action="store_true",
+        help=(
+            "Instead of scanning for new secrets, (re)write --baseline from the "
+            "current findings in the given files (or, if none are given, every "
+            "git-tracked file). Review the result before committing it."
+        ),
+    )
     args = parser.parse_args(argv)
 
+    if args.update_baseline:
+        if not args.baseline:
+            print("detect-secrets: --update-baseline requires --baseline PATH.")
+            return 1
+        files = args.files or _tracked_files()
+        return _update_baseline(files, Path(args.baseline))
+
+    baseline_results: dict = {}
+    if args.baseline:
+        baseline_path = Path(args.baseline)
+        if not baseline_path.exists():
+            print(
+                f"detect-secrets: baseline '{args.baseline}' not found — scanning "
+                "without suppression. Create one with:\n"
+                f"  detect-secrets --update-baseline --baseline {args.baseline} <files>"
+            )
+        else:
+            baseline_results = _load_baseline(baseline_path)
+
     found_any = False
+    suppressed = 0
     for filepath in args.files:
-        hits = _scan(Path(filepath))
-        if hits:
+        for lineno, hashed, snippet, label in _findings_for_file(filepath):
+            if hashed in _known_hashes(baseline_results, filepath):
+                suppressed += 1
+                continue
             found_any = True
-            for lineno, snippet, label in hits:
-                print(f"{filepath}:{lineno}: [{label}] {snippet!r}")
+            print(f"{filepath}:{lineno}: [{label}] {snippet!r}")
 
     if found_any:
-        print("\ndetect-secrets: potential secrets found — remove them before committing.")
+        print(
+            "\ndetect-secrets: potential secrets found — remove them before committing."
+        )
+        if args.baseline:
+            print(
+                "  If a finding is a reviewed false positive, add it to the baseline with:\n"
+                f"  detect-secrets --update-baseline --baseline {args.baseline} <files>"
+            )
         return 1
+
+    if suppressed:
+        print(f"detect-secrets: {suppressed} known finding(s) suppressed via baseline.")
     return 0
 
 
