@@ -4,6 +4,47 @@ import sys
 from pathlib import Path
 
 
+def _resolve_project_root() -> Path:
+    """Resolve the root of the repository being checked.
+
+    Under pre-commit, this script runs from an isolated, per-hook virtualenv
+    (typically under ~/.cache/pre-commit/...), so `Path(__file__)` points at
+    *this package's own* install location, never at the repository the user
+    is committing to. pre-commit always invokes hooks with the working
+    directory set to the top level of the repository under test, so
+    `Path.cwd()` is the correct anchor, not this file's location.
+
+    We cross-check against `git rev-parse --show-toplevel` where git is
+    available, since that's the authoritative answer and lets us warn if the
+    two ever disagree instead of quietly measuring/writing to the wrong
+    place.
+    """
+    cwd = Path.cwd().resolve()
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+            check=False,
+        )
+    except FileNotFoundError:
+        return cwd
+
+    if result.returncode != 0:
+        # Not inside a git working tree (or git unavailable) — cwd is the
+        # only signal we have, which is what pre-commit gives us anyway.
+        return cwd
+
+    git_root = Path(result.stdout.strip()).resolve()
+    if git_root != cwd:
+        print(
+            f"Warning: current directory ({cwd}) is not the git repository "
+            f"root ({git_root}); using the git root for coverage."
+        )
+    return git_root
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -25,19 +66,23 @@ def main(argv=None):
     )
     args = parser.parse_args(argv)
 
-    # Determine the project root directory
-    script_dir = Path(__file__).resolve()
-    project_root = script_dir.parents[2]  # hooks/.. = project root
+    # Determine the project root directory: the repository being checked,
+    # not the location this script happens to be installed at.
+    project_root = _resolve_project_root()
 
     # Build the command
-    cmd = [
-        sys.executable,
-        "-m",
-        "pytest",
-        "--cov=" + str(project_root),
-        "--cov-report=term",
-        "--cov-report=xml:" + str(project_root / "coverage.xml"),
-    ] + list(args.files) + args.add_opts
+    cmd = (
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--cov=" + str(project_root),
+            "--cov-report=term",
+            "--cov-report=xml:" + str(project_root / "coverage.xml"),
+        ]
+        + list(args.files)
+        + args.add_opts
+    )
 
     try:
         result = subprocess.run(cmd, capture_output=False)
@@ -47,7 +92,11 @@ def main(argv=None):
         # Parse coverage from XML report
         coverage_file = project_root / "coverage.xml"
         if not coverage_file.exists():
-            print("Error: coverage.xml not found. Coverage may have failed.")
+            print(
+                f"Error: coverage.xml not found at {coverage_file}. "
+                "Coverage collection may have failed, or no tests were "
+                f"collected under project root {project_root}."
+            )
             return 1
 
         import xml.etree.ElementTree as ET
