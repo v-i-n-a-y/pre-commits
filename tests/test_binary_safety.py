@@ -56,7 +56,7 @@ def test_copyright_check_leaves_pdf_untouched_even_with_forced_style(
 ):
     """--style forces a comment style regardless of extension, bypassing the
     extension allow-list that normally keeps copyright-check off unknown
-    file types — the binary guard must still catch it."""
+    file types; the binary guard must still catch it."""
     pdf = _copy_fixture(fixtures_dir, tmp_path, "doc.pdf")
     before = pdf.read_bytes()
 

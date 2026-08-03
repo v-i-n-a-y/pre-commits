@@ -32,7 +32,7 @@ def _resolve_project_root() -> Path:
         return cwd
 
     if result.returncode != 0:
-        # Not inside a git working tree (or git unavailable) — cwd is the
+        # Not inside a git working tree (or git unavailable). cwd is the
         # only signal we have, which is what pre-commit gives us anyway.
         return cwd
 
