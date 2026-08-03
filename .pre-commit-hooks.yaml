@@ -18,7 +18,6 @@
   entry: conventional-commit
   language: python
   stages: [commit-msg]
-  pass_filenames: false
 
 - id: ruff-check
   name: ruff-check
