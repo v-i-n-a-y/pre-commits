@@ -1,6 +1,8 @@
 import argparse
 from pathlib import Path
 
+from hooks._binary import is_binary
+
 
 def _fix(path: Path) -> bool:
     try:
@@ -8,6 +10,8 @@ def _fix(path: Path) -> bool:
     except OSError:
         return False
     if not original:
+        return False
+    if is_binary(path):
         return False
     fixed = original.rstrip(b"\r\n") + b"\n"
     if fixed == original:

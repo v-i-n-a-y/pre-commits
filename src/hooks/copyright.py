@@ -3,6 +3,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from hooks._binary import is_binary
+
 HEADER_SCAN_LIMIT = 20
 DEFAULT_YEAR = str(datetime.now().year)
 
@@ -123,6 +125,9 @@ def _process_file(
 ) -> bool:
     """Return True if the file was changed (or would change under --dry-run)."""
     path = Path(filepath)
+    if is_binary(path):
+        print(f"copyright-check: skipping '{filepath}' (binary content detected)")
+        return False
     try:
         lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
     except (UnicodeDecodeError, OSError):

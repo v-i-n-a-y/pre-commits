@@ -2,8 +2,12 @@ import argparse
 import re
 from pathlib import Path
 
+from hooks._binary import is_binary
+
 
 def _fix(path: Path) -> bool:
+    if is_binary(path):
+        return False
     try:
         original = path.read_text(encoding="utf-8")
     except (UnicodeDecodeError, OSError):

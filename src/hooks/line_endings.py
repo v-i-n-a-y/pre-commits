@@ -1,6 +1,8 @@
 import argparse
 from pathlib import Path
 
+from hooks._binary import is_binary
+
 
 def _fix(path: Path, eol: bytes) -> bool:
     try:
@@ -8,6 +10,8 @@ def _fix(path: Path, eol: bytes) -> bool:
     except OSError:
         return False
     if b"\r" not in original:
+        return False
+    if is_binary(path):
         return False
     # Normalise all CRLF → LF first, then apply desired eol
     normalised = original.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
