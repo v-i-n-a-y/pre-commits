@@ -67,7 +67,15 @@ SECRET_PATTERNS: list[tuple[str, str]] = [
         # in vendored bundles or lockfiles (npm integrity hashes are just as
         # "high entropy"); those paths are excluded at the pre-commit config
         # level instead, since no regex can tell those apart from a real key.
-        r"(?<![A-Za-z0-9+=])(?![0-9a-fA-F]{40}(?![A-Za-z0-9+=]))[A-Za-z0-9+]{40}(?![A-Za-z0-9+=])",
+        # A third guard: the value must contain at least one digit. A real key
+        # is base64 of 30 random bytes, so the chance it has no digit at all is
+        # about 0.02 per cent, while a 40-character run of pure letters is
+        # almost always an identifier. Without this the check fired on class
+        # names: DatasetProductsPageDoesNotClaimFreeTests is exactly 40 letters
+        # and was reported as an AWS key, which is the kind of noise that gets
+        # a security check switched off.
+        r"(?<![A-Za-z0-9+=])(?![0-9a-fA-F]{40}(?![A-Za-z0-9+=]))"
+        r"(?=[A-Za-z0-9+]*[0-9])[A-Za-z0-9+]{40}(?![A-Za-z0-9+=])",
         "AWS secret access key (bare)",
     ),
     (

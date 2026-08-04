@@ -135,7 +135,7 @@ def test_aws_secret_access_key_bare_value_is_caught(tmp_path, run_hook):
     _write(
         tmp_path,
         "notes.txt",
-        "wJalrXUtnFEMIkNotARealKeyEXAMPLEabcdefgh\n",
+        "wJalrXUtnFEMI7kNotARealKey3XAMPLEabcdefg\n",
     )
 
     result = run_hook("detect_secrets", ["notes.txt"], cwd=tmp_path)
@@ -169,3 +169,25 @@ def test_url_path_is_not_flagged_as_aws_key(tmp_path, run_hook):
     result = run_hook("detect_secrets", ["skaffold.yaml"], cwd=tmp_path)
 
     assert result.returncode == 0, result.stdout
+
+
+def test_a_forty_letter_identifier_is_not_flagged_as_an_aws_key(tmp_path, run_hook):
+    """A class name is not a secret.
+
+    The bare 40-character check fired on
+    ``DatasetProductsPageDoesNotClaimFreeTests``, which is exactly forty
+    letters, and reported it as an AWS secret access key. A real key is base64
+    of thirty random bytes, so the chance it contains no digit at all is about
+    two in ten thousand, while a long run of pure letters is almost always an
+    identifier. Noise like this is how a security check ends up switched off.
+    """
+    _write(
+        tmp_path,
+        "models.py",
+        "class DatasetProductsPageDoesNotClaimFreeTests(TestCase):\n    pass\n",
+    )
+
+    result = run_hook("detect_secrets", ["models.py"], cwd=tmp_path)
+
+    assert result.returncode == 0, result.stdout
+    assert "AWS secret access key" not in result.stdout
