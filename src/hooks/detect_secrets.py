@@ -6,6 +6,15 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Words that show up in deliberately-committed placeholder secrets throughout
+# test suites (e.g. "sk_test_fake_for_unit_tests", "whsec_placeholder"). Used
+# to keep the whsec_ pattern below from flagging fixtures it cannot otherwise
+# tell apart from a live one, since Stripe does not encode test/live mode in
+# that prefix. See the whsec_ entry for why this is needed.
+_PLACEHOLDER_WORDS = (
+    r"fake|placeholder|dummy|sample|example|changeme|redacted|test|xxxx|todo"
+)
+
 # (pattern, label) — ordered from most to least specific
 SECRET_PATTERNS: list[tuple[str, str]] = [
     (r"AKIA[0-9A-Z]{16}", "AWS Access Key ID"),
@@ -14,6 +23,53 @@ SECRET_PATTERNS: list[tuple[str, str]] = [
     (r"xox[baprs]-[0-9A-Za-z\-]{10,}", "Slack token"),
     (r"AIza[0-9A-Za-z\-_]{35}", "Google API key"),
     (r"eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}", "JWT token"),
+    (
+        # Stripe live-mode secret and restricted keys. sk_test_/rk_test_ keys
+        # are deliberately committed throughout the test suite and are not
+        # matched: the prefix alone already tells live and test apart here,
+        # unlike the whsec_ case below.
+        r"\b(?:sk|rk)_live_[A-Za-z0-9]{10,}",
+        "Stripe live API key",
+    ),
+    (
+        # Stripe webhook signing secret. Unlike sk_/rk_ keys, Stripe does not
+        # put "test" or "live" in the whsec_ prefix, so a live secret cannot
+        # be told apart from a test one by prefix. Instead this requires the
+        # value to be long enough to be a real generated secret (Stripe's are
+        # ~32+ chars) and to not contain one of the placeholder words used by
+        # the fixtures already committed in this codebase (whsec_fake,
+        # whsec_placeholder). A real secret coincidentally containing one of
+        # those English words as a substring is not a realistic risk; a
+        # placeholder failing to be caught by this list is the risk this
+        # trades away, so keep the list in sync with any new fixture wording.
+        rf"whsec_(?![A-Za-z0-9_]*(?:{_PLACEHOLDER_WORDS})\b)[A-Za-z0-9]{{20,}}",
+        "Stripe webhook signing secret",
+    ),
+    (
+        # AWS secret access key, named explicitly: the common real-world
+        # shape (env var, settings assignment, values file) and the highest
+        # confidence match, since the keyword makes intent unambiguous.
+        r"(?i)(?:aws[_\-]?)?secret[_\-]?access[_\-]?key\s*[:=]\s*['\"]?[A-Za-z0-9+/]{30,}",
+        "AWS secret access key",
+    ),
+    (
+        # AWS secret access key, bare: the AKIA id and the secret value are
+        # often committed separately, so this also matches an unlabelled
+        # 40-char value in the key's base64 alphabet. Two guards keep this
+        # from tripping on the many other 40-character-ish tokens in a repo:
+        # it must not be all-hex (rules out git/SHA1 hashes, the single
+        # biggest source of 40-char strings in a codebase), and it excludes
+        # '/' from the charset (rules out URL and Helm chart paths, which are
+        # otherwise indistinguishable at this length). That trade gives up
+        # matching the roughly half of real keys containing '/', which is an
+        # acceptable cost against a check that would otherwise cry wolf on
+        # every long path in the repo. It still won't catch secrets sitting
+        # in vendored bundles or lockfiles (npm integrity hashes are just as
+        # "high entropy"); those paths are excluded at the pre-commit config
+        # level instead, since no regex can tell those apart from a real key.
+        r"(?<![A-Za-z0-9+=])(?![0-9a-fA-F]{40}(?![A-Za-z0-9+=]))[A-Za-z0-9+]{40}(?![A-Za-z0-9+=])",
+        "AWS secret access key (bare)",
+    ),
     (
         r"(?i)(?:api[_\-]?key|api[_\-]?secret|auth[_\-]?token|access[_\-]?token"
         r"|secret[_\-]?key|client[_\-]?secret|private[_\-]?key)\s*[:=]\s*['\"]?[A-Za-z0-9+/\-_]{20,}",

@@ -218,8 +218,16 @@ Scans staged files for hardcoded secrets and credentials without requiring any e
 | `xox[baprs]-...` | Slack token |
 | `AIza...` | Google API key |
 | `eyJ...` | JWT |
+| `sk_live_...`, `rk_live_...` | Stripe live API key |
+| `whsec_...` (long, no placeholder wording) | Stripe webhook signing secret |
+| `aws_secret_access_key = "..."` / bare 40-char value | AWS secret access key |
 | `api_key = "..."`, `secret = "..."` etc. | Generic secret assignment |
 | `password = "..."` | Hardcoded password |
+
+Two of these are deliberately narrower than they could be, to avoid failing on test fixtures or unrelated repo content:
+
+- **Stripe:** `sk_test_...` and `rk_test_...` keys are never matched — only `_live_` keys are. Stripe's webhook secret prefix (`whsec_...`) does not encode test vs. live mode, so it cannot be told apart by prefix; instead this only flags values long enough to be a real generated secret that do not contain an obvious placeholder word (`fake`, `placeholder`, `dummy`, `test`, etc.), so that fixtures like `whsec_fake` stay allowed.
+- **AWS secret access key:** the bare (unlabelled) match only fires on values in the key's base64 alphabet that are not all-hex (which rules out git/SHA1 hashes) and excludes `/` from the charset (which rules out URL and Helm chart paths). It will not catch a real key sitting in a lockfile or vendored bundle, since nothing distinguishes that from an npm integrity hash at this length — exclude those paths at the `.pre-commit-config.yaml` level instead.
 
 **Arguments:**
 
