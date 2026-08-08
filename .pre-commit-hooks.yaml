@@ -12,6 +12,13 @@
   entry: detect-secrets
   language: python
   types: [text]
+- id: gitignore-shadow-check
+  name: gitignore-shadow-check
+  description: "Flag .gitignore patterns with no anchoring slash that match a tracked directory name"
+  entry: gitignore-shadow-check
+  language: python
+  files: '(^|/)\.gitignore$'
+
 - id: conventional-commit
   name: conventional-commit
   description: "Enforce Conventional Commits format on commit messages"
