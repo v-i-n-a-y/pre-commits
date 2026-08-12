@@ -17,6 +17,7 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-endings
       - id: no-commit-to-branch
+      - id: no-em-dash
       - id: detect-secrets
       - id: gitignore-shadow-check
       - id: conventional-commit
@@ -202,6 +203,24 @@ Blocks direct commits to protected branches. Defaults to `main` and `master`; us
 - id: no-commit-to-branch
   args: [--branch, main, --branch, develop]
 ```
+
+---
+
+### `no-em-dash`
+
+Rejects the em dash (`—`, U+2014) anywhere in the given files. It flags exactly that one code point: not the en dash (`–`, U+2013), which has its own legitimate uses (numeric ranges, minus signs) this rule was never aimed at, and not any other dash-shaped or box-drawing character.
+
+It only reports; it does not rewrite. The correct fix depends on what the em dash was doing in the sentence, a full stop and a new sentence, a comma, or a colon where it introduces a definition or a list, and that choice is a judgement call, not a substitution a hook should make unattended. It deliberately does not offer a `--fix`: a mechanical rewrite most often reaches for a bare hyphen, which changes what the sentence means rather than preserving it.
+
+```yaml
+- id: no-em-dash
+```
+
+```
+docs/guide.md:12: Two things — a plan and a person — get this done.
+```
+
+Scope this per repo with `files`/`exclude` on the hook, the same way as any other hook here. A house style rule that applies to source and documentation typically has no business inside vendored third-party code, data files, or a heritage archive nobody is going to rewrite; exclude those paths explicitly and say why in the config, rather than letting the hook decide.
 
 ---
 

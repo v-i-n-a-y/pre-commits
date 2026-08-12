@@ -20,6 +20,7 @@ no-commit-to-branch = "hooks.no_commit_to_branch:main"
 detect-secrets = "hooks.detect_secrets:main"
 gitignore-shadow-check = "hooks.gitignore_shadow:main"
 conventional-commit = "hooks.conventional_commit:main"
+no-em-dash = "hooks.no_em_dash:main"
 
 [build-system]
 requires = ["setuptools>=61"]

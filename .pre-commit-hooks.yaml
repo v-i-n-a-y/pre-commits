@@ -102,3 +102,10 @@
   language: python
   pass_filenames: false
   always_run: true
+
+- id: no-em-dash
+  name: no-em-dash
+  description: "Reject em dashes (—, U+2014); rewrite as real punctuation instead"
+  entry: no-em-dash
+  language: python
+  types: [text]
