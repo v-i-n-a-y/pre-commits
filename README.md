@@ -27,6 +27,8 @@ repos:
       - id: pytest-run
       - id: coverage-check
         args: [--min-coverage, "90"]
+      - id: nbstripout
+      - id: jupytext-sync
 ```
 
 Then run:
@@ -315,6 +317,37 @@ Validates commit messages against the [Conventional Commits](https://www.convent
 - id: conventional-commit
   stages: [commit-msg]
   args: [--types, wip, spike]
+```
+
+---
+
+### `nbstripout`
+
+Strips Jupyter notebook outputs, execution counts, and run-specific metadata (kernel `language_info`, cell `execution`/`collapsed`/`scrolled` state, notebook-level `widgets`) before commit, so diffs show only real content changes. Self-contained — reflects [`nbstripout`](https://github.com/kynan/nbstripout)'s default behaviour without depending on the package itself. Auto-fixes and returns exit code 1 to trigger re-staging.
+
+Applies to: `.ipynb`
+
+**Arguments:**
+
+| Argument | Description |
+|----------|-------------|
+| `--keep-output` | Keep cell outputs (still strips execution counts/metadata) |
+| `--keep-count` | Keep execution counts and kernel `language_info` |
+
+```yaml
+- id: nbstripout
+```
+
+---
+
+### `jupytext-sync`
+
+Keeps a plain-Python "percent format" sibling file (`notebook.py` next to `notebook.ipynb`, using `# %%` cell markers) in sync with each staged notebook, so notebook changes can be reviewed as an ordinary text diff. Inspired by pairing with [`jupytext`](https://github.com/mwouts/jupytext); this is a minimal, self-contained reimplementation of its percent format for diff review, not a drop-in for the full jupytext CLI (no markdown/light formats, no round-trip execution). Auto-fixes and returns exit code 1 to trigger re-staging.
+
+Applies to: `.ipynb`
+
+```yaml
+- id: jupytext-sync
 ```
 
 ---

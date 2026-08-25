@@ -21,8 +21,9 @@ detect-secrets = "hooks.detect_secrets:main"
 gitignore-shadow-check = "hooks.gitignore_shadow:main"
 conventional-commit = "hooks.conventional_commit:main"
 no-em-dash = "hooks.no_em_dash:main"
+nbstripout = "hooks.nbstripout:main"
+jupytext-sync = "hooks.jupytext_sync:main"
 
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
-

@@ -109,3 +109,17 @@
   entry: no-em-dash
   language: python
   types: [text]
+
+- id: nbstripout
+  name: nbstripout
+  description: "Strip Jupyter notebook outputs, execution counts, and run-specific metadata"
+  entry: nbstripout
+  language: python
+  files: '\.ipynb$'
+
+- id: jupytext-sync
+  name: jupytext-sync
+  description: "Keep a plain-Python 'percent format' sibling in sync with each .ipynb notebook"
+  entry: jupytext-sync
+  language: python
+  files: '\.ipynb$'
