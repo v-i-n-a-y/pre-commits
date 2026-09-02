@@ -91,6 +91,9 @@ SECRET_PATTERNS: list[tuple[str, str]] = [
 
 _COMPILED = [(re.compile(pat), label) for pat, label in SECRET_PATTERNS]
 
+# Inline suppression marker, matching the convention of Yelp's detect-secrets.
+_ALLOWLIST_PRAGMA = re.compile(r"(?i)pragma\s*:\s*allowlist\s+secret")
+
 BASELINE_FORMAT_VERSION = 1
 
 
@@ -107,6 +110,12 @@ def _scan(path: Path) -> list[tuple[int, str, str]]:
 
     hits = []
     for lineno, line in enumerate(lines, start=1):
+        if _ALLOWLIST_PRAGMA.search(line):
+            # The author has reviewed this line and marked it as a fixture
+            # value, using the same inline marker Yelp's detect-secrets
+            # honours, so a repo can move between the two tools without
+            # re-annotating.
+            continue
         for regex, label in _COMPILED:
             m = regex.search(line)
             if m:
